@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños, Toroupoust! 🎉</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #fff9f0;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            flex-direction: column;
+        }
+        h1 {
+            color: #5d4037;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+        #contenedor-regalo {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            /* AQUÍ VA LA FOTO REAL QUE SE REVELARÁ AL FINAL */
+            background-image: url('tio.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-color: #e0e0e0; /* Color gris por si tarda en cargar la foto */
+        }
+        .cuadro {
+            position: absolute;
+            /* AQUÍ VA LA IMAGEN DE MINECRAFT QUE TAPA LA FOTO */
+            background-image: url('Abrazados.jpg');
+            background-size: 400px 600px; /* Obligamos a que mida lo mismo que el contenedor */
+            border: 1px solid rgba(255, 255, 255, 0.4); /* Borde blanco sutil para simular el rompecabezas */
+            box-sizing: border-box;
+            border-radius: 4px;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        /* Clase para los cuadros que SÍ se pueden tocar */
+        .activo {
+            cursor: pointer;
+            animation: palpitar 1.5s infinite;
+        }
+        .activo:hover {
+            filter: brightness(1.2);
+            z-index: 10;
+        }
+
+        /* Clase para los cuadros bloqueados temporalmente */
+        .inactivo {
+            cursor: not-allowed;
+        }
+
+        /* Efecto cuando el cuadro desaparece */
+        .oculto {
+            opacity: 0;
+            transform: scale(0.6) rotate(15deg);
+            pointer-events: none;
+        }
+
+        /* Animación de brillo para saber dónde dar clic */
+        @keyframes palpitar {
+            0% { box-shadow: inset 0 0 10px rgba(255,255,255,0.2); }
+            50% { box-shadow: inset 0 0 25px rgba(255,255,255,0.8); border-color: white; }
+            100% { box-shadow: inset 0 0 10px rgba(255,255,255,0.2); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>¡Feliz Cumpleaños, Toroupoust! 🥳</h1>
+    
+    <div id="contenedor-regalo">
+        </div>
+
+    <audio id="musicaFondo" src="musica.mp3" loop></audio>
+
+    <script>
+        const contenedor = document.getElementById('contenedor-regalo');
+        const musica = document.getElementById('musicaFondo');
+        let musicaIniciada = false;
+        
+        const filas = 6; 
+        const columnas = 4;
+        let faseActual = 1;
+        let cuadrosPorFase = { 1: 0, 2: 0, 3: 0 };
+        
+        const anchoCuadro = contenedor.offsetWidth / columnas;
+        const altoCuadro = contenedor.offsetHeight / filas;
+
+        for (let i = 0; i < filas; i++) {
+            for (let j = 0; j < columnas; j++) {
+                const cuadro = document.createElement('div');
+                cuadro.classList.add('cuadro');
+                
+                let faseDelCuadro = 3; 
+                if (i === 0 || i === 5) {
+                    faseDelCuadro = 1; 
+                } else if (i === 1 || i === 4) {
+                    faseDelCuadro = 2; 
+                }
+
+                cuadro.dataset.fase = faseDelCuadro;
+                cuadrosPorFase[faseDelCuadro]++;
+
+                if (faseDelCuadro === 1) {
+                    cuadro.classList.add('activo');
+                } else {
+                    cuadro.classList.add('inactivo');
+                }
+                
+                cuadro.style.width = `${anchoCuadro}px`;
+                cuadro.style.height = `${altoCuadro}px`;
+                cuadro.style.top = `${i * altoCuadro}px`;
+                cuadro.style.left = `${j * anchoCuadro}px`;
+                
+                // ESTA ES LA MAGIA: Ajusta la imagen de Minecraft para cada cuadrito
+                cuadro.style.backgroundPosition = `-${j * anchoCuadro}px -${i * altoCuadro}px`;
+
+                cuadro.addEventListener('click', function() {
+                    if (parseInt(this.dataset.fase) !== faseActual || this.classList.contains('oculto')) {
+                        return;
+                    }
+
+                    this.classList.remove('activo', 'inactivo');
+                    this.classList.add('oculto');
+                    
+                    if (!musicaIniciada) {
+                        musica.play();
+                        musicaIniciada = true;
+                    }
+
+                    cuadrosPorFase[faseActual]--;
+
+                    if (cuadrosPorFase[faseActual] === 0) {
+                        faseActual++;
+                        const todosLosCuadros = document.querySelectorAll('.cuadro');
+                        todosLosCuadros.forEach(c => {
+                            if (parseInt(c.dataset.fase) === faseActual) {
+                                c.classList.remove('inactivo');
+                                c.classList.add('activo');
+                            }
+                        });
+                    }
+                });
+
+                contenedor.appendChild(cuadro);
+            }
+        }
+    </script>
+</body>
+</html>
